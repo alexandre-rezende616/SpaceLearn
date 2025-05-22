@@ -2,17 +2,72 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
+import { useTheme } from '../context/ThemeContext'; // 1. Importe o hook useTheme
+
+// Defina estilos base que não mudam com o tema
+const baseStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 30,
+  },
+  backButton: {
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 25,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    marginTop: 20,
+  },
+  option: {
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3, // Elevação sutil
+  },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  optionText: {
+    fontSize: 16,
+    marginLeft: 12,
+  },
+  icon: {
+    marginRight: 4, // Ajuste se necessário
+  },
+  info: {
+    marginTop: 40,
+    alignItems: 'center',
+  },
+  infoText: {
+    fontSize: 14,
+  },
+});
 
 export default function ConfiguracoesScreen() {
   const navigation = useNavigation();
+  const { theme, toggleTheme } = useTheme(); // 2. Use o hook para acessar o tema e a função de alternar
 
   const [notificacoes, setNotificacoes] = useState(true);
-  const [temaEscuro, setTemaEscuro] = useState(false);
+  // O estado do tema escuro agora vem do contexto
+  const temaEscuroAtivado = theme.isDark; 
 
   const toggleNotificacoes = () => setNotificacoes(prev => !prev);
-  const toggleTemaEscuro = () => {
-    setTemaEscuro(prev => !prev);
-    Alert.alert('Tema', 'Alternar tema ainda não está implementado.');
+  const handleToggleTemaEscuro = () => {
+    toggleTheme(); // 3. Chama a função do contexto para alternar e salvar o tema
   };
 
   const abrirPolitica = () => {
@@ -24,112 +79,111 @@ export default function ConfiguracoesScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[baseStyles.container, { backgroundColor: theme.colors.backgroundPrimary }]}> 
       {/* Botão de voltar */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#fff" />
+      <TouchableOpacity style={baseStyles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Configurações</Text>
+      <Text style={[baseStyles.title, { color: theme.colors.accentPrimary }]}>Configurações</Text>
 
-      <Text style={styles.sectionTitle}>Preferências</Text>
+      <Text style={[baseStyles.sectionTitle, { color: theme.colors.textPrimary }]}>Preferências</Text>
 
-      <View style={styles.option}>
-        <View style={styles.optionLeft}>
-          <Ionicons name="notifications-outline" size={22} color="#0C0931" style={styles.icon} />
-          <Text style={styles.optionText}>Notificações</Text>
+      <View style={[
+        baseStyles.option,
+        {
+          backgroundColor: theme.colors.backgroundSecondary,
+          shadowColor: theme.isDark ? '#000' : '#A9A9A9',
+        }
+      ]}>
+        <View style={baseStyles.optionLeft}>
+          <Ionicons 
+            name="notifications-outline" 
+            size={22} 
+            color={theme.colors.textPrimary} 
+            style={baseStyles.icon} 
+          />
+          <Text style={[baseStyles.optionText, { color: theme.colors.textPrimary }]}>Notificações</Text>
         </View>
-        <Switch value={notificacoes} onValueChange={toggleNotificacoes} />
+        <Switch 
+          value={notificacoes} 
+          onValueChange={toggleNotificacoes}
+          trackColor={{ false: "#767577", true: theme.colors.accentPrimary }}
+          thumbColor={notificacoes ? (theme.isDark ? theme.colors.accentPrimary : theme.colors.backgroundPrimary) : "#f4f3f4"}
+        />
+      </View>
+      <View style={[
+        baseStyles.option,
+        {
+          backgroundColor: theme.colors.backgroundSecondary,
+          shadowColor: theme.isDark ? '#000' : '#A9A9A9',
+        }
+      ]}>
+        <View style={baseStyles.optionLeft}>
+          <Ionicons 
+            name="moon-outline" 
+            size={22} 
+            color={theme.colors.textPrimary} 
+            style={baseStyles.icon} 
+          />
+          <Text style={[baseStyles.optionText, { color: theme.colors.textPrimary }]}>Tema escuro</Text>
+        </View>
+        <Switch 
+          value={temaEscuroAtivado} 
+          onValueChange={handleToggleTemaEscuro}
+          trackColor={{ false: "#767577", true: theme.colors.accentPrimary }}
+          thumbColor={temaEscuroAtivado ? (theme.isDark ? theme.colors.accentPrimary : theme.colors.backgroundPrimary) : "#f4f3f4"}
+        />
       </View>
 
-      <View style={styles.option}>
-        <View style={styles.optionLeft}>
-          <Ionicons name="moon-outline" size={22} color="#0C0931" style={styles.icon} />
-          <Text style={styles.optionText}>Tema escuro</Text>
-        </View>
-        <Switch value={temaEscuro} onValueChange={toggleTemaEscuro} />
-      </View>
+      <Text style={[baseStyles.sectionTitle, { color: theme.colors.textPrimary }]}>Sobre o aplicativo</Text>
 
-      <Text style={styles.sectionTitle}>Sobre o aplicativo</Text>
-
-      <TouchableOpacity style={styles.option} onPress={abrirPolitica}>
-        <View style={styles.optionLeft}>
-          <Ionicons name="document-text-outline" size={22} color="#0C0931" style={styles.icon} />
-          <Text style={styles.optionText}>Política de Privacidade</Text>
+      <TouchableOpacity 
+        style={[
+          baseStyles.option, 
+          { 
+            backgroundColor: theme.colors.backgroundSecondary,
+            shadowColor: theme.isDark ? '#000' : '#A9A9A9',
+          }
+        ]} 
+        onPress={abrirPolitica}
+      >
+        <View style={baseStyles.optionLeft}>
+          <Ionicons 
+            name="document-text-outline" 
+            size={22} 
+            color={theme.colors.textPrimary} 
+            style={baseStyles.icon} 
+          />
+          <Text style={[baseStyles.optionText, { color: theme.colors.textPrimary }]}>Política de Privacidade</Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#0C0931" />
+        <Ionicons name="chevron-forward" size={20} color={theme.colors.textPrimary} />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.option} onPress={abrirTermos}>
-        <View style={styles.optionLeft}>
-          <Ionicons name="clipboard-outline" size={22} color="#0C0931" style={styles.icon} />
-          <Text style={styles.optionText}>Termos de Uso</Text>
+      <TouchableOpacity 
+        style={[
+          baseStyles.option, 
+          { 
+            backgroundColor: theme.colors.backgroundSecondary,
+            shadowColor: theme.isDark ? '#000' : '#A9A9A9',
+          }
+        ]} 
+        onPress={abrirTermos}
+      >
+        <View style={baseStyles.optionLeft}>
+          <Ionicons 
+            name="clipboard-outline" 
+            size={22} 
+            color={theme.colors.textPrimary} 
+            style={baseStyles.icon} 
+          />
+          <Text style={[baseStyles.optionText, { color: theme.colors.textPrimary }]}>Termos de Uso</Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#0C0931" />
+        <Ionicons name="chevron-forward" size={20} color={theme.colors.textPrimary} />
       </TouchableOpacity>
-
-      <View style={styles.info}>
-        <Text style={styles.infoText}>Versão do app: 1.0.0</Text>
-      </View>
+      <View style={baseStyles.info}>
+        <Text style={[baseStyles.infoText, { color: theme.colors.textSecondary }]}>Versão do app: 1.0.0</Text>
+      </View> 
     </ScrollView>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1D1856', // Midnight Blue
-    paddingHorizontal: 20,
-    paddingTop: 30,
-  },
-  backButton: {
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 26,
-    color: '#F2F2F7', // Ghost White
-    fontWeight: 'bold',
-    marginBottom: 25,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    color: '#F2F2F7', // Ghost White
-    fontWeight: 'bold',
-    marginBottom: 12,
-    marginTop: 20,
-  },
-  option: {
-    backgroundColor: '#F2F2F7', // Ghost White
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  optionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#0C0931', // Oxford Blue
-    marginLeft: 12,
-  },
-  icon: {
-    marginRight: 4,
-  },
-  info: {
-    marginTop: 40,
-    alignItems: 'center',
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#ccc',
-  },
-});
+} 

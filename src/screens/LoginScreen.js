@@ -1,7 +1,7 @@
 // src/screens/LoginScreen.js
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function LoginScreen() {
@@ -9,6 +9,15 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [tipoUsuario, setTipoUsuario] = useState('aluno'); // 'aluno' ou 'professor'
+
+  const handleLogin = () => {
+    if (tipoUsuario === 'aluno') {
+      router.push('/(tabs)/home'); // Redireciona para o painel do aluno
+    } else if (tipoUsuario === 'professor') {
+      router.push('/(professor)/painel'); // Redireciona para o painel do professor
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -43,7 +52,43 @@ export default function LoginScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/(tabs)/home')}>
+      {/* Seleção do tipo de usuário */}
+      <View style={styles.tipoUsuarioContainer}>
+        <TouchableOpacity
+          style={[
+            styles.tipoUsuarioButton,
+            tipoUsuario === 'aluno' && styles.tipoUsuarioSelecionado,
+          ]}
+          onPress={() => setTipoUsuario('aluno')}
+        >
+          <Text
+            style={[
+              styles.tipoUsuarioTexto,
+              tipoUsuario === 'aluno' && styles.tipoUsuarioTextoSelecionado,
+            ]}
+          >
+            Aluno
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tipoUsuarioButton,
+            tipoUsuario === 'professor' && styles.tipoUsuarioSelecionado,
+          ]}
+          onPress={() => setTipoUsuario('professor')}
+        >
+          <Text
+            style={[
+              styles.tipoUsuarioTexto,
+              tipoUsuario === 'professor' && styles.tipoUsuarioTextoSelecionado,
+            ]}
+          >
+            Professor
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Entrar</Text>
       </TouchableOpacity>
 
@@ -114,6 +159,31 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
     color: '#0C0931',
+  },
+  tipoUsuarioContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+    width: '100%',
+  },
+  tipoUsuarioButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 10,
+    borderRadius: 30,
+    backgroundColor: '#F2F2F7',
+    alignItems: 'center',
+  },
+  tipoUsuarioSelecionado: {
+    backgroundColor: '#E80074', // Red Purple
+  },
+  tipoUsuarioTexto: {
+    fontSize: 16,
+    color: '#0C0931', // Oxford Blue
+  },
+  tipoUsuarioTextoSelecionado: {
+    color: '#F2F2F7', // Ghost White
+    fontWeight: 'bold',
   },
   loginButton: {
     backgroundColor: '#00CFE5', // Sky Blue Crayola

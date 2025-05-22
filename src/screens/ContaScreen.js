@@ -2,9 +2,115 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../context/ThemeContext'; // Importe o hook useTheme
+
+// Crie uma função para gerar estilos baseados no tema
+const createStyles = (theme) => StyleSheet.create({
+  // Os estilos que dependem do tema virão aqui
+  // Por enquanto, vamos manter os estilos que já foram adaptados inline
+  // e os que não foram, serão adaptados abaixo.
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.backgroundPrimary,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 10, // Ajustado para o novo paddingTop do container
+    left: 20,
+    padding: 10, // Área de toque maior
+    zIndex: 1,
+  },
+  profileContainer: {
+    alignItems: 'center',
+    marginTop: 20, // Adicionado para dar espaço ao botão de voltar
+    marginBottom: 40,
+    backgroundColor: theme.colors.backgroundSecondary,
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: theme.isDark ? '#000' : '#A9A9A9',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: theme.colors.accentPrimary,
+    marginBottom: 15,
+  },
+  name: {
+    fontSize: 24,
+    color: theme.colors.textPrimary,
+    fontWeight: 'bold',
+  },
+  role: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    marginBottom: 5,
+  },
+  email: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  actionsContainer: {
+    marginTop: 30,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: 12,
+    paddingHorizontal: 10, // Ajustado para padding interno
+    paddingVertical: 5,    // Ajustado para padding interno
+    gap: 0, // Removido gap, usando margin no actionItem
+  },
+  actionItem: {
+    paddingVertical: 15, // Aumentado para melhor toque
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderSecondary,
+  },
+  actionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  actionText: {
+    fontSize: 18,
+    color: theme.colors.textPrimary,
+    fontWeight: '500',
+  },
+  logoutButton: {
+    backgroundColor: theme.colors.accentSecondary, // Usando cor do tema
+    borderRadius: 8,
+    marginTop: 10, // Espaçamento
+    marginBottom: 5, // Espaçamento
+    borderBottomWidth: 0,
+  },
+  logoutText: {
+    color: theme.colors.buttonSecondaryText,
+    fontSize: 18,
+    fontWeight: '500',
+    textAlign: 'center', // Centralizar texto no botão de logout
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+  },
+  versionText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+});
 
 export default function ContaScreen() {
   const router = useRouter();
+  const { theme } = useTheme(); // Use o hook para acessar o tema
+  const styles = createStyles(theme); // Crie os estilos usando o tema atual
 
   const handleLogout = () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair da conta?', [
@@ -19,17 +125,17 @@ export default function ContaScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Botão de Voltar */}
+      {/* Botão de Voltar - cor do ícone usa cor do tema */}
       <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={38} color="#F2F2F7" />
+        <Ionicons name="arrow-back" size={38} color={theme.colors.textPrimary} />
       </TouchableOpacity>
 
       {/* Perfil do usuário */}
       <View style={styles.profileContainer}>
-        <Image
-          source={require('../../assets/images/avatarr.png')}
-          style={styles.avatar}
-        />
+      <Image // Mantendo a imagem, mas o card ao redor será escuro
+  source={require('../../assets/images/avatarr.png')}
+  style={styles.avatar}
+/>
         <Text style={styles.name}>Alexandre Torres</Text>
         <Text style={styles.role}>Aluno</Text>
         <Text style={styles.email}>aluno@spacelearn.com</Text>
@@ -39,28 +145,28 @@ export default function ContaScreen() {
       <View style={styles.actionsContainer}>
         <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('Editar perfil')}>
           <View style={styles.actionContent}>
-            <Feather name="edit" size={20} color="#0C0931" />
+            <Feather name="edit" size={20} color={theme.colors.textPrimary} />
             <Text style={styles.actionText}>Editar Perfil</Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('Alterar senha')}>
           <View style={styles.actionContent}>
-            <MaterialIcons name="lock-outline" size={20} color="#0C0931" />
+            <MaterialIcons name="lock-outline" size={20} color={theme.colors.textPrimary} />
             <Text style={styles.actionText}>Alterar Senha</Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/configuracao')}>
           <View style={styles.actionContent}>
-            <Ionicons name="settings-outline" size={20} color="#0C0931" />
+            <Ionicons name="settings-outline" size={20} color={theme.colors.textPrimary} />
             <Text style={styles.actionText}>Configurações</Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.actionItem, styles.logoutButton]} onPress={handleLogout}>
           <View style={styles.actionContent}>
-            <MaterialIcons name="logout" size={20} color="#fff" />
+            <MaterialIcons name="logout" size={20} color={theme.colors.buttonSecondaryText} />
             <Text style={styles.logoutText}>Sair da Conta</Text>
           </View>
         </TouchableOpacity>
@@ -73,96 +179,3 @@ export default function ContaScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1D1856',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 0,
-    left: 20,
-    padding: 10,
-  },
-  profileContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-    backgroundColor: '#F2F2F7',
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: '#0C0931',
-    marginBottom: 15,
-  },
-  name: {
-    fontSize: 24,
-    color: '#0C0931',
-    fontWeight: 'bold',
-  },
-  role: {
-    fontSize: 16,
-    color: '#888',
-    marginBottom: 5,
-  },
-  email: {
-    fontSize: 14,
-    color: '#555',
-  },
-  actionsContainer: {
-    marginTop: 30,
-    backgroundColor: '#F2F2F7',
-    borderRadius: 12,
-    padding: 20,
-    gap: 20,
-  },
-  actionItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  actionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  actionText: {
-    fontSize: 18,
-    color: '#0C0931',
-    fontWeight: '500',
-  },
-  logoutButton: {
-    backgroundColor: '#E80074',
-    borderRadius: 8,
-    marginTop: 20,
-    borderBottomWidth: 0, // remove linha separadora
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '500',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    alignItems: 'center',
-  },
-  versionText: {
-    fontSize: 14,
-    color: '#F2F2F7',
-  },
-});

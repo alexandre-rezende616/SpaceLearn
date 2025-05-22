@@ -1,45 +1,39 @@
 import { Tabs } from 'expo-router';
-import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function TabLayout() {
+export default function TabsLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="central"
-        options={{
-          title: 'Central',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="rocket" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="diario"
-        options={{
-          title: 'Diário',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="book" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="medalhas"
-        options={{
-          title: 'medalhas',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy" size={size} color={color} />
-          ),
-        }}
-      />
+    <Tabs
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: true,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'diario') {
+            iconName = focused ? 'book' : 'book-outline';
+          } else if (route.name === 'central') {
+            iconName = focused ? 'rocket' : 'rocket-outline';
+          } else if (route.name === 'medalhas') {
+            iconName = focused ? 'medal' : 'medal-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#00CFE5',
+        tabBarInactiveTintColor: '#A9A9A9', // Cinza mais claro para melhor contraste no fundo escuro
+        tabBarStyle: {
+          backgroundColor: '#0C0931', // OXFORD BLUE para o fundo da tab bar
+          borderTopColor: '#0C0931', // Mesma cor do fundo para remover a linha ou uma cor sutil se desejar borda
+        },
+      })}
+    >
+      <Tabs.Screen name="home" />
+      <Tabs.Screen name="diario" />
+      <Tabs.Screen name="central" />
+      <Tabs.Screen name="medalhas" />
     </Tabs>
   );
 }

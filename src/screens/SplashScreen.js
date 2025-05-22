@@ -14,10 +14,10 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../../assets/images/astronauta.png')}
-        style={styles.image}
-        resizeMode="contain"
-      />
+  source={require('../../assets/images/astronauta.png')}
+  style={styles.image}
+  resizeMode="contain"
+/>
 
       <Text style={styles.title}>SpaceLearn</Text>
       <Text style={styles.subtitle}>explore a criação de satélites</Text>

@@ -1,6 +1,6 @@
 import React from "react";
-import MedalDetailScreen from "../src/screens/MedalDetailScreen";
+import MedalDetailScreen from "../src/screens/alunos/MedalDetailScreen";
 
-export default function DetalhesMedalhas(){
-    return <MedalDetailScreen/>;
+export default function DetalhesMedalhas() {
+  return <MedalDetailScreen />;
 }
