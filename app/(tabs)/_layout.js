@@ -1,7 +1,10 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../src/context/ThemeContext'; // Importar useTheme
 
 export default function TabsLayout() {
+  const { theme } = useTheme(); // Acessar o tema
+
   return (
     <Tabs
       screenOptions={({ route }) => ({
@@ -22,11 +25,11 @@ export default function TabsLayout() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#00CFE5',
-        tabBarInactiveTintColor: '#A9A9A9', // Cinza mais claro para melhor contraste no fundo escuro
+        tabBarActiveTintColor: theme.colors.accentPrimary, // Cor ativa do tema
+        tabBarInactiveTintColor: theme.colors.textSecondary, // Cor inativa do tema
         tabBarStyle: {
-          backgroundColor: '#0C0931', // OXFORD BLUE para o fundo da tab bar
-          borderTopColor: '#0C0931', // Mesma cor do fundo para remover a linha ou uma cor sutil se desejar borda
+          backgroundColor: theme.colors.backgroundPrimary, // Cor de fundo da tab bar do tema
+          borderTopColor: theme.colors.backgroundPrimary, // Cor da borda superior (ou theme.colors.border)
         },
       })}
     >

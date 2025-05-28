@@ -1,148 +1,148 @@
-// app/(tabs)/diario.js
-
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  TouchableOpacity,
   TextInput,
-  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  Alert,
+  Keyboard,
 } from 'react-native';
 import LayoutPadrao from '../../components/LayoutPadrao';
-import { useTheme } from '../../context/ThemeContext'; // Importe o hook useTheme
+import { useTheme } from '../../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
-// Defina estilos base que não mudam com o tema
-const baseStyles = StyleSheet.create({
-  topo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  titulo: {
-    fontSize: 22,
+const getStyles = (theme) => StyleSheet.create({
+  headerTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
+    color: theme.colors.accentPrimary,
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
-  botaoAdicionar: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
+  inputContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
   },
-  textoBotao: {
-    fontWeight: 'bold',
-  },
-  scroll: {
-    flex: 1,
-  },
-  notaContainer: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-  },
-  tituloNota: {
+  input: {
+    backgroundColor: theme.colors.inputBackground,
+    borderRadius: 10,
+    padding: 15,
     fontSize: 16,
+    color: theme.colors.textPrimary,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  saveButton: {
+    backgroundColor: theme.colors.buttonPrimaryBackground,
+    paddingVertical: 15,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 20,
+  },
+  saveButtonText: {
+    color: theme.colors.buttonPrimaryText,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
-    borderBottomWidth: 1,
   },
-  textoNota: {
-    fontSize: 14,
-    minHeight: 60, // Para permitir múltiplas linhas
-    textAlignVertical: 'top', // Alinha o texto ao topo no Android para multiline
-  },
-  botaoExcluir: {
-    marginTop: 12,
-    alignSelf: 'flex-end',
-  },
-  textoExcluir: {
+  listTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginHorizontal: 16,
+    marginBottom: 10,
+  },
+  anotacaoCard: {
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: 10,
+    padding: 15,
+    marginHorizontal: 16,
+    marginBottom: 10,
+  },
+  anotacaoTexto: {
+    fontSize: 16,
+    color: theme.colors.textPrimary,
+  },
+  anotacaoData: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginTop: 5,
+    textAlign: 'right',
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
 });
 
 export default function DiarioScreen() {
-  const [notas, setNotas] = useState([]);
-  const { theme } = useTheme(); // Use o hook para acessar o tema
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  const [novaAnotacao, setNovaAnotacao] = useState('');
+  const [anotacoesSalvas, setAnotacoesSalvas] = useState([]);
 
-  const adicionarNota = () => {
-    const novaNota = { id: Date.now(), titulo: '', texto: '' };
-    setNotas([...notas, novaNota]);
-  };
-
-  const atualizarNota = (id, campo, valor) => {
-    setNotas((prevNotas) =>
-      prevNotas.map((nota) =>
-        nota.id === id ? { ...nota, [campo]: valor } : nota
-      )
-    );
-  };
-
-  const excluirNota = (id) => {
-    setNotas((prevNotas) => prevNotas.filter((nota) => nota.id !== id));
+  const handleSalvarAnotacao = () => {
+    if (novaAnotacao.trim() === '') {
+      Alert.alert('Atenção', 'Sua anotação não pode estar vazia.');
+      return;
+    }
+    const anotacao = {
+      id: Date.now().toString(),
+      texto: novaAnotacao,
+      data: new Date().toLocaleString(),
+    };
+    setAnotacoesSalvas([anotacao, ...anotacoesSalvas]);
+    setNovaAnotacao('');
+    Keyboard.dismiss(); // Fecha o teclado
+    Alert.alert('Sucesso', 'Anotação salva no seu diário!');
   };
 
   return (
     <LayoutPadrao>
-      <View style={baseStyles.topo}>
-        <Text style={[baseStyles.titulo, { color: theme.colors.accentPrimary }]}>Minhas Anotações</Text>
-        <TouchableOpacity 
-          style={[baseStyles.botaoAdicionar, { backgroundColor: theme.colors.buttonPrimaryBackground }]} 
-          onPress={adicionarNota}
-        >
-          <Text style={[baseStyles.textoBotao, { color: theme.colors.buttonPrimaryText }]}>+ Adicionar Nota</Text>
-        </TouchableOpacity>
+      <Text style={styles.headerTitle}>Meu Diário de Bordo</Text>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Escreva seus pensamentos, aprendizados, ideias..."
+          placeholderTextColor={theme.colors.textPlaceholder || '#999'}
+          value={novaAnotacao}
+          onChangeText={setNovaAnotacao}
+          multiline
+        />
       </View>
+      <TouchableOpacity style={styles.saveButton} onPress={handleSalvarAnotacao}>
+        <Text style={styles.saveButtonText}>Salvar Anotação</Text>
+      </TouchableOpacity>
 
-      <ScrollView style={baseStyles.scroll}>
-        {notas.map((nota) => (
-          <View 
-            key={nota.id} 
-            style={[
-              baseStyles.notaContainer, 
-              { 
-                backgroundColor: theme.colors.backgroundSecondary,
-                shadowColor: theme.isDark ? '#000' : '#A9A9A9', // Sombra adaptável
-              }
-            ]}
-          >
-            <TextInput
-              style={[
-                baseStyles.tituloNota, 
-                { 
-                  color: theme.colors.textPrimary,
-                  borderBottomColor: theme.colors.accentPrimary 
-                }
-              ]}
-              placeholder="Título"
-              placeholderTextColor={theme.colors.textSecondary} // Placeholder usa cor secundária
-              value={nota.titulo}
-              onChangeText={(texto) =>
-                atualizarNota(nota.id, 'titulo', texto)
-              }
-            />
-            <TextInput
-              style={[
-                baseStyles.textoNota,
-                { color: theme.colors.textPrimary }
-              ]}
-              placeholder="Escreva sua anotação..."
-              placeholderTextColor={theme.colors.textSecondary} // Placeholder usa cor secundária
-              multiline
-              value={nota.texto}
-              onChangeText={(texto) =>
-                atualizarNota(nota.id, 'texto', texto)
-              }
-            />
-            <TouchableOpacity
-              onPress={() => excluirNota(nota.id)}
-              style={baseStyles.botaoExcluir}
-            >
-              <Text style={[baseStyles.textoExcluir, { color: theme.colors.accentSecondary }]}>Excluir</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </ScrollView>
+      <Text style={styles.listTitle}>Minhas Anotações</Text>
+      {anotacoesSalvas.length === 0 ? (
+        <View style={styles.emptyStateContainer}>
+          <Text style={styles.emptyStateText}>Você ainda não fez nenhuma anotação.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={anotacoesSalvas}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.anotacaoCard}>
+              <Text style={styles.anotacaoTexto}>{item.texto}</Text>
+              <Text style={styles.anotacaoData}>{item.data}</Text>
+            </View>
+          )}
+        />
+      )}
     </LayoutPadrao>
   );
 }

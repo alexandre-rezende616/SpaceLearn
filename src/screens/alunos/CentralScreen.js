@@ -1,201 +1,251 @@
-// app/(tabs)/central.js
+import { useRouter } from 'expo-router'; // Embora não usado para navegação ainda, é bom ter
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity, // Para futuros cliques em aulas
+  View,
+} from 'react-native';
+import LayoutPadrao from '../../components/LayoutPadrao'; // Usando o Layout Padrão
+import { useTheme } from '../../context/ThemeContext';
+import { fetchAllAulas } from '../../services/aulaService'; // Importar a nova função
+import { fetchAllMissoes } from '../../services/missaoService'; // Importar serviço de missões
 
-import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import LayoutPadrao from '../../components/LayoutPadrao';
-import { useTheme } from '../../context/ThemeContext'; // Importe o hook useTheme
-
-// Defina estilos base que não mudam com o tema
-const baseStyles = StyleSheet.create({
-  title: {
+const getStyles = (theme) => StyleSheet.create({
+  // screenContainer herdado do LayoutPadrao
+  headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: theme.colors.accentPrimary,
     marginBottom: 16,
+    paddingHorizontal: 16, // Adicionado para alinhar com o conteúdo da FlatList
+    paddingTop: 16, // Espaçamento superior para o título
   },
-  tabBar: {
+  segmentContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
     marginBottom: 16,
-    borderRadius: 10,
+    paddingHorizontal: 16,
   },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
+  segmentButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
   },
-  tabText: {
+  segmentButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: theme.colors.textSecondary,
   },
-  activeTab: {
-    borderRadius: 10, // Mantém o borderRadius para a aba ativa
-  },
-  content: {
+  loadingContainer: {
     flex: 1,
-  },
-  card: { // Card de Aula
-    borderRadius: 12,
-    marginBottom: 16,
-    padding: 10,
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.backgroundPrimary,
   },
-  cardImage: {
-    width: '100%',
-    height: 160,
-    borderRadius: 8,
-    marginBottom: 12,
+  listContentContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
-  cardContent: {
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
+    padding: 20,
   },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    textTransform: 'capitalize',
+  emptyStateText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
   },
-  exploreButton: { // Botão Explore
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignSelf: 'center',
-  },
-  exploreText: {
-    fontWeight: 'bold',
-  },
-  roteiroCard: { // Card de Roteiro
+  aulaCard: {
+    backgroundColor: theme.colors.backgroundSecondary,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-  },
-  roteiroTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textTransform: 'capitalize',
-  },
-  roteiroText: {
-    fontSize: 14,
     marginBottom: 12,
+    shadowColor: theme.isDark ? '#000' : '#A9A9A9',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  pdfButton: { // Botão Abrir PDF
-    paddingVertical: 8,
-    borderRadius: 6,
-    alignItems: 'center',
+  aulaTitulo: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: 4,
+  },
+  aulaConteudoPreview: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
     marginBottom: 8,
   },
-  pdfText: {
-    fontWeight: 'bold',
+  aulaData: {
+    fontSize: 12,
+    color: theme.colors.textTertiary || theme.colors.textSecondary,
   },
-  markDone: { // Texto Marcar como concluído
-    textAlign: 'center',
+  // Estilos para o card de missão (pode ser similar ao aulaCard ou customizado)
+  missaoCard: {
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: theme.isDark ? '#000' : '#A9A9A9',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  missaoTitulo: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: 4,
+  },
+  missaoDescricao: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: 8,
+  },
+  missaoInfo: {
+    fontSize: 12,
+    color: theme.colors.textTertiary || theme.colors.textSecondary,
   },
 });
 
 export default function CentralScreen() {
-  const [abaAtiva, setAbaAtiva] = useState('aulas');
-  const { theme } = useTheme(); // Use o hook para acessar o tema
+  const router = useRouter();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
 
-  // Dados dos roteiros como um array de objetos
-  const roteirosData = [
-    {
-      id: 'roteiro1',
-      titulo: 'Hello, World !',
-      texto: 'Escreva um script para exibir "Hello, World!" na tela. Siga os passos abaixo para criar o programa:',
-    },
-    {
-      id: 'roteiro2',
-      titulo: 'o seu nome',
-      texto: 'Escreva um script simples para exibir o seu nome na tela. Esse é um ótimo primeiro passo para aprender como funcionam os comandos de saída (output) em programação.',
-    },
-  ];
+  const [activeSegment, setActiveSegment] = useState('aulas'); // 'aulas' ou 'missoes'
+  const [aulas, setAulas] = useState([]);
+  const [missoes, setMissoes] = useState([]);
+  const [loadingAulas, setLoadingAulas] = useState(true);
+  const [loadingMissoes, setLoadingMissoes] = useState(false);
+
+  const nomeDasAbas = { aulas: "Aulas", missoes: "Missões" };
+
+  useEffect(() => {
+    const carregarAulas = async () => {
+      setLoadingAulas(true); // Corrigido: usar setLoadingAulas
+      try {
+        const dataAulas = await fetchAllAulas();
+        setAulas(dataAulas);
+      } catch (error) {
+        Alert.alert('Erro', 'Não foi possível carregar as aulas disponíveis.');
+        console.error("Erro ao carregar todas as aulas:", error);
+      } finally {
+        setLoadingAulas(false);
+      }
+    };
+    carregarAulas();
+  }, []);
+
+  useEffect(() => {
+    const carregarMissoes = async () => {
+      if (activeSegment === 'missoes' && missoes.length === 0) { // Carrega apenas se a aba estiver ativa e as missões ainda não foram carregadas
+        setLoadingMissoes(true);
+        try {
+          const dataMissoes = await fetchAllMissoes();
+          setMissoes(dataMissoes);
+        } catch (error) {
+          Alert.alert('Erro', 'Não foi possível carregar as missões.');
+          console.error("Erro ao carregar missões:", error);
+        } finally {
+          setLoadingMissoes(false);
+        }
+      }
+    };
+    carregarMissoes();
+  }, [activeSegment, missoes.length]); // Adicionado missoes.length para evitar recarregamentos desnecessários se já tiver dados
+
+  // Mostra loading geral se ambas as seções estiverem carregando ou a primeira seção (aulas) ainda não carregou
+  if (loadingAulas || (activeSegment === 'aulas' && aulas.length === 0)) { //  Melhoria: loading geral para aulas
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.accentPrimary} />
+      </View>
+    );
+  }
 
   return (
     <LayoutPadrao>
-      <Text style={[baseStyles.title, { color: theme.colors.accentPrimary }]}>Central de Missões</Text>
+      <Text style={styles.headerTitle}>Central de Aulas e Missões</Text>
 
-      <View style={[baseStyles.tabBar, { backgroundColor: theme.colors.backgroundSecondary }]}>
-        <TouchableOpacity
-          style={[
-            baseStyles.tabButton,
-            abaAtiva === 'aulas' && [baseStyles.activeTab, { backgroundColor: theme.colors.accentPrimary }] // Cor de fundo da aba ativa
-          ]}
-          onPress={() => setAbaAtiva('aulas')}
-        >
-          <Text style={[
-            baseStyles.tabText,
-            { color: abaAtiva === 'aulas' ? theme.colors.buttonPrimaryText : theme.colors.textPrimary } // Cor do texto da aba (ativo vs inativo)
-          ]}>Aulas</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            baseStyles.tabButton,
-            abaAtiva === 'roteiros' && [baseStyles.activeTab, { backgroundColor: theme.colors.accentPrimary }] // Cor de fundo da aba ativa
-          ]}
-          onPress={() => setAbaAtiva('roteiros')}
-        >
-          <Text style={[
-            baseStyles.tabText,
-            { color: abaAtiva === 'roteiros' ? theme.colors.buttonPrimaryText : theme.colors.textPrimary } // Cor do texto da aba (ativo vs inativo)
-          ]}>Roteiros de Aula</Text>
-        </TouchableOpacity>
+      <View style={styles.segmentContainer}>
+        {Object.keys(nomeDasAbas).map((key) => (
+          <TouchableOpacity
+            key={key}
+            style={[
+              styles.segmentButton,
+              { backgroundColor: activeSegment === key ? theme.colors.accentPrimary : theme.colors.backgroundSecondary }
+            ]}
+            onPress={() => setActiveSegment(key)}
+          >
+            <Text style={[
+              styles.segmentButtonText,
+              { color: activeSegment === key ? theme.colors.buttonPrimaryText : theme.colors.textSecondary }
+            ]}>
+              {nomeDasAbas[key]}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      <ScrollView style={baseStyles.content}>
-        {abaAtiva === 'aulas' ? (
-          <>
-            <View style={[baseStyles.card, { backgroundColor: theme.colors.backgroundSecondary }]}>
-              <Image source={require('../../../assets/images/aula1.png')} style={baseStyles.cardImage} />
-              <View style={baseStyles.cardContent}>
-                <Text style={[baseStyles.cardTitle, { color: theme.colors.textPrimary }]}>metodologia científica aplicada a projetos</Text>
-                <TouchableOpacity style={[baseStyles.exploreButton, { backgroundColor: theme.colors.accentSecondary }]}>
-                  <Text style={[baseStyles.exploreText, { color: theme.colors.buttonSecondaryText }]}>Explore</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={[baseStyles.card, { backgroundColor: theme.colors.backgroundSecondary }]}>
-              <Image source={require('../../../assets/images/aula2.png')} style={baseStyles.cardImage} />
-              <View style={baseStyles.cardContent}>
-                <Text style={[baseStyles.cardTitle, { color: theme.colors.textPrimary }]}>ambiente espacial e seus riscos</Text>
-                <TouchableOpacity style={[baseStyles.exploreButton, { backgroundColor: theme.colors.accentSecondary }]}>
-                  <Text style={[baseStyles.exploreText, { color: theme.colors.buttonSecondaryText }]}>Explore</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={[baseStyles.card, { backgroundColor: theme.colors.backgroundSecondary }]}>
-              <Image source={require('../../../assets/images/aula3.png')} style={baseStyles.cardImage} />
-              <View style={baseStyles.cardContent}>
-                <Text style={[baseStyles.cardTitle, { color: theme.colors.textPrimary }]}>componentes e aplicações</Text>
-                <TouchableOpacity style={[baseStyles.exploreButton, { backgroundColor: theme.colors.accentSecondary }]}>
-                  <Text style={[baseStyles.exploreText, { color: theme.colors.buttonSecondaryText }]}>Explore</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </>
+      {activeSegment === 'aulas' && (
+        loadingAulas ? <ActivityIndicator color={theme.colors.accentPrimary} style={{marginTop: 20}} /> : aulas.length === 0 ? (
+          <View style={styles.emptyStateContainer}>
+            <Text style={styles.emptyStateText}>Nenhuma aula disponível no momento.</Text>
+          </View>
         ) : (
-          <>
-            {roteirosData.map((roteiro) => (
-              <View 
-                key={roteiro.id} 
-                style={[baseStyles.roteiroCard, { backgroundColor: theme.colors.backgroundSecondary }]}
+          <FlatList
+            data={aulas}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContentContainer}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.aulaCard}
+                onPress={() => router.push(`/(stack-only)/aluno/aula/${item.id}`)}
               >
-                <Text style={[baseStyles.roteiroTitle, { color: theme.colors.textPrimary }]}>{roteiro.titulo}</Text>
-                <Text style={[baseStyles.roteiroText, { color: theme.colors.textSecondary }]}>
-                  {roteiro.texto}
-                </Text>
-                <TouchableOpacity style={[baseStyles.pdfButton, { backgroundColor: theme.colors.buttonPrimaryBackground }]}>
-                  <Text style={[baseStyles.pdfText, { color: theme.colors.buttonPrimaryText }]}>Abrir PDF</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => console.log(`Marcar roteiro '${roteiro.titulo}' como concluído`)}>
-                  <Text style={[baseStyles.markDone, { color: theme.colors.accentSecondary }]}>Marcar como concluído</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </>
-        )}
-      </ScrollView>
+                <Text style={styles.aulaTitulo}>{item.titulo}</Text>
+                <Text style={styles.aulaConteudoPreview} numberOfLines={3}>{item.conteudo}</Text>
+                <Text style={styles.aulaData}>Publicada em: {new Date(item.dataPublicacao).toLocaleDateString()}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        )
+      )}
+
+      {activeSegment === 'missoes' && (
+        loadingMissoes ? <ActivityIndicator color={theme.colors.accentPrimary} style={{marginTop: 20}} /> : missoes.length === 0 ? (
+          <View style={styles.emptyStateContainer}>
+            <Text style={styles.emptyStateText}>Nenhuma missão disponível no momento.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={missoes}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContentContainer}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.missaoCard}
+                onPress={() => router.push(`/(stack-only)/aluno/missao/${item.id}`)}
+              >
+                <Text style={styles.missaoTitulo}>{item.titulo}</Text>
+                <Text style={styles.missaoDescricao} numberOfLines={2}>{item.descricao}</Text>
+                <Text style={styles.missaoInfo}>Tipo: {item.tipo}</Text>
+                <Text style={styles.missaoInfo}>Status: {item.status}</Text>
+                <Text style={styles.missaoInfo}>Recompensa: {item.recompensa}</Text>
+                {item.dataEntrega && <Text style={styles.missaoInfo}>Entrega: {new Date(item.dataEntrega).toLocaleDateString()}</Text>}
+              </TouchableOpacity>
+            )}
+          />
+        )
+      )}
     </LayoutPadrao>
   );
 }

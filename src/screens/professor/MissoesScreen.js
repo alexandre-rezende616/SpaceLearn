@@ -10,21 +10,21 @@ const missoes = [
     titulo: 'Missão 01: Construindo um Satélite',
     turma: 'Órbita 1',
     prazo: '15/05/2025',
-    status: 'Aberta',
+    status: 'Concluída',
   },
   {
     id: '2',
     titulo: 'Missão 02: Avaliando Riscos Espaciais',
     turma: 'Galáxia 2',
     prazo: '20/05/2025',
-    status: 'Em andamento',
+    status: 'Aberta',
   },
   {
     id: '3',
     titulo: 'Missão 03: Aplicações de Componentes',
     turma: 'Estação 3',
     prazo: '25/05/2025',
-    status: 'Concluída',
+    status: 'Aberta',
   },
 ];
 

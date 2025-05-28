@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import LayoutPadrao from '../../components/LayoutPadrao';
 import { useTheme } from '../../context/ThemeContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Adicionar importação
 
 // Defina estilos base que não mudam com o tema
 const baseStyles = StyleSheet.create({
@@ -79,10 +80,6 @@ const baseStyles = StyleSheet.create({
   },
   cardDescricao: {
     fontSize: 14,
-  },
-  iconeSino: {
-    width: 24,
-    height: 24,
   },
   modalContainer: {
     flex: 1,
@@ -203,13 +200,10 @@ export default function HomeScreen() {
                   }`}
                 </Text>
                 <TouchableOpacity onPress={() => alternarNotificacao(id)}>
-                  <Image
-                    source={
-                      notificacoes[id]
-                        ? require('../../../assets/images/bell.png')
-                        : require('../../../assets/images/bell-off.png')
-                    }
-                    style={baseStyles.iconeSino}
+                  <MaterialCommunityIcons
+                    name={notificacoes[id] ? 'bell' : 'bell-off-outline'}
+                    size={24}
+                    color={theme.colors.textPrimary}
                   />
                 </TouchableOpacity>
               </View>

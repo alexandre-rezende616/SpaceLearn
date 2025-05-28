@@ -178,7 +178,7 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginBottom: 10,
-    color: theme.colors.inputText,
+    color: theme.colors.textPrimary, // Alterado para garantir que o texto digitado seja visível no tema escuro
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
