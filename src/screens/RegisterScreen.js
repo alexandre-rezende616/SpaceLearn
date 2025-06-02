@@ -1,12 +1,42 @@
 // src/screens/RegisterScreen.js
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { registerUser } from '../services/authService'; // Importar a função de registro
 
 export default function RegisterScreen() {
   const router = useRouter();
   const [tipoConta, setTipoConta] = useState('aluno');
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [matricula, setMatricula] = useState(''); // Coletando, mas não usado pelo backend ainda
+  const [senha, setSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!nome || !email || !senha || !confirmarSenha) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+    if (senha !== confirmarSenha) {
+      Alert.alert('Erro', 'As senhas não coincidem.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      // O backend espera 'role', não 'tipoConta'. E não usa 'matricula' por enquanto.
+      const userData = { nome, email, senha, role: tipoConta };
+      const data = await registerUser(userData);
+      Alert.alert('Sucesso!', data.message || 'Usuário registrado com sucesso! Faça o login.');
+      router.push('/login'); // Navega para a tela de login após o registro
+    } catch (error) {
+      Alert.alert('Erro no Registro', error.message || 'Não foi possível registrar o usuário.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -33,14 +63,47 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           </View>
 
-          <TextInput placeholder="Nome completo" style={styles.input} placeholderTextColor="#999" />
-          <TextInput placeholder="E-mail" style={styles.input} placeholderTextColor="#999" keyboardType="email-address" />
-          <TextInput placeholder="Matrícula" style={styles.input} placeholderTextColor="#999" />
-          <TextInput placeholder="Senha" style={styles.input} placeholderTextColor="#999" secureTextEntry />
-          <TextInput placeholder="Confirmar senha" style={styles.input} placeholderTextColor="#999" secureTextEntry />
-
-          <TouchableOpacity style={styles.registerButton} onPress={() => router.push('/login')}>
-            <Text style={styles.registerButtonText}>Registrar</Text>
+          <TextInput
+            placeholder="Nome completo"
+            style={styles.input}
+            placeholderTextColor="#999"
+            value={nome}
+            onChangeText={setNome}
+          />
+          <TextInput
+            placeholder="E-mail"
+            style={styles.input}
+            placeholderTextColor="#999"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            placeholder="Matrícula (Opcional por enquanto)"
+            style={styles.input}
+            placeholderTextColor="#999"
+            value={matricula}
+            onChangeText={setMatricula}
+          />
+          <TextInput
+            placeholder="Senha"
+            style={styles.input}
+            placeholderTextColor="#999"
+            secureTextEntry
+            value={senha}
+            onChangeText={setSenha}
+          />
+          <TextInput
+            placeholder="Confirmar senha"
+            style={styles.input}
+            placeholderTextColor="#999"
+            secureTextEntry
+            value={confirmarSenha}
+            onChangeText={setConfirmarSenha}
+          />
+          <TouchableOpacity style={styles.registerButton} onPress={handleRegister} disabled={isLoading}>
+            <Text style={styles.registerButtonText}>{isLoading ? 'Registrando...' : 'Registrar'}</Text>
           </TouchableOpacity>
         </View>
 

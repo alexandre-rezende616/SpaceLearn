@@ -1,21 +1,47 @@
 // src/screens/LoginScreen.js
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react'; // Adicionado React para clareza
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { loginUser } from '../services/authService'; // Importar a função de login
+// import AsyncStorage from '@react-native-async-storage/async-storage'; // O AuthContext cuidará disso
+import { useAuth } from '../context/AuthContext'; // Importar o hook useAuth
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [tipoUsuario, setTipoUsuario] = useState('aluno'); // 'aluno' ou 'professor'
+  // O tipo de usuário será determinado pelo backend após o login
+  // const [tipoUsuario, setTipoUsuario] = useState('aluno');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth(); // Obter a função login do contexto
 
-  const handleLogin = () => {
-    if (tipoUsuario === 'aluno') {
-      router.push('/(tabs)/home'); // Redireciona para o painel do aluno
-    } else if (tipoUsuario === 'professor') {
-      router.push('/(professor)/painel'); // Redireciona para o painel do professor
+  const handleLogin = async () => {
+    if (!email || !senha) {
+      Alert.alert('Erro', 'Por favor, preencha email e senha.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const data = await loginUser({ email, senha });
+      // Chamar a função login do AuthContext
+      await login(data.user, data.token);
+
+      // O Alert e o redirecionamento agora são gerenciados pelo AuthContext ou podem ser mantidos aqui se preferir um feedback imediato
+      Alert.alert('Sucesso!', data.message || 'Login bem-sucedido!');
+
+      // O useEffect no AuthContext cuidará do redirecionamento, mas podemos forçar aqui também
+      // if (data.user.role === 'aluno') {
+      //   router.replace('/(tabs)/home');
+      // } else if (data.user.role === 'professor') {
+      //   router.replace('/(professor)/painel');
+      // }
+
+    } catch (error) {
+      Alert.alert('Erro no Login', error.message || 'Não foi possível fazer login.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -53,7 +79,7 @@ export default function LoginScreen() {
       </View>
 
       {/* Seleção do tipo de usuário */}
-      <View style={styles.tipoUsuarioContainer}>
+      {/* <View style={styles.tipoUsuarioContainer}>
         <TouchableOpacity
           style={[
             styles.tipoUsuarioButton,
@@ -86,10 +112,10 @@ export default function LoginScreen() {
             Professor
           </Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>Entrar</Text>
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
+        <Text style={styles.loginButtonText}>{isLoading ? 'Entrando...' : 'Entrar'}</Text>
       </TouchableOpacity>
 
       <View style={styles.separatorContainer}>

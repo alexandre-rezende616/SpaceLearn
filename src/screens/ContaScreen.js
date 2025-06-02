@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../context/ThemeContext'; // Importe o hook useTheme
+import { useAuth } from '../context/AuthContext'; // Importar o hook useAuth
 
 // Crie uma função para gerar estilos baseados no tema
 const createStyles = (theme) => StyleSheet.create({
@@ -35,13 +36,9 @@ const createStyles = (theme) => StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 2,
-    borderColor: theme.colors.accentPrimary,
+  avatarIconStyle: { // Novo estilo para o ícone, se necessário, ou pode ser inline
     marginBottom: 15,
+    // A cor e o tamanho serão definidos diretamente no componente Ionicons
   },
   name: {
     fontSize: 24,
@@ -110,12 +107,17 @@ const createStyles = (theme) => StyleSheet.create({
 export default function ContaScreen() {
   const router = useRouter();
   const { theme } = useTheme(); // Use o hook para acessar o tema
+  const { user, logout } = useAuth(); // Obter o usuário e a função logout do AuthContext
   const styles = createStyles(theme); // Crie os estilos usando o tema atual
 
-  const handleLogout = () => {
+  const handleLogout = async () => { // Marcar como async pois logout no AuthContext é async
     Alert.alert('Sair', 'Tem certeza que deseja sair da conta?', [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', onPress: () => router.replace('/login') },
+      { text: 'Sair', onPress: async () => {
+          await logout(); // Chamar a função logout do AuthContext
+          // A função logout no AuthContext já cuida do redirecionamento para /login
+        } 
+      },
     ]);
   };
 
@@ -132,13 +134,15 @@ export default function ContaScreen() {
 
       {/* Perfil do usuário */}
       <View style={styles.profileContainer}>
-      <Image // Mantendo a imagem, mas o card ao redor será escuro
-  source={require('../../assets/images/avatarr.png')}
-  style={styles.avatar}
-/>
-        <Text style={styles.name}>Alexandre Torres</Text>
-        <Text style={styles.role}>Aluno</Text>
-        <Text style={styles.email}>aluno@spacelearn.com</Text>
+        <Ionicons
+          name="person-circle-outline"
+          size={120} // Tamanho grande, similar à imagem anterior
+          color={theme.colors.accentPrimary} // Usando a cor de destaque do tema, como a borda da imagem anterior
+          style={styles.avatarIconStyle} // Aplicando a margem inferior
+        />
+        <Text style={styles.name}>{user?.nome || 'Nome do Usuário'}</Text>
+        <Text style={styles.role}>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Perfil'}</Text>
+        <Text style={styles.email}>{user?.email || 'email@example.com'}</Text>
       </View>
 
       {/* Blocos de ações */}

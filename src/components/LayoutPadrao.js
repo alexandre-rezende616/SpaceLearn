@@ -1,6 +1,7 @@
 import React from 'react'; // Adicionado React para clareza, embora muitas vezes implícito
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons'; // Importar Ionicons
 import { useTheme } from '../context/ThemeContext';
 
 // Defina estilos base que não mudam com o tema
@@ -16,12 +17,7 @@ const baseStyles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
     borderBottomWidth: 1,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    // marginTop: 0, // marginTop: 0 é o padrão, pode ser omitido
+    // O estilo do avatar/ícone será definido inline ou em um novo estilo se necessário
   },
   content: {
     flex: 1,
@@ -50,9 +46,10 @@ export default function LayoutPadrao({ children }) {
         <View /> 
         
         <TouchableOpacity onPress={() => router.push('/conta')}>
-          <Image
-            source={require('../../assets/images/avatarr.png')} // Verifique se este caminho está correto
-            style={baseStyles.avatar}
+          <Ionicons
+            name="person-circle-outline"
+            size={36} // Tamanho similar ao da imagem anterior
+            color={theme.colors.textPrimary} // Cor baseada no tema
           />
         </TouchableOpacity>
       </View>

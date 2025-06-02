@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext'; // Importe o hook useTheme
+import { useAuth } from '../../context/AuthContext'; // Importar o hook useAuth
 
 // Defina estilos base que não mudam com o tema
 const baseStyles = StyleSheet.create({
@@ -95,20 +96,19 @@ const baseStyles = StyleSheet.create({
 export default function ContaProfessorScreen() {
   const router = useRouter();
   const { theme } = useTheme(); // Use o hook para acessar o tema
+  const { user, logout } = useAuth(); // Obter o usuário e a função logout do AuthContext
 
-  // Dados fictícios do professor - substitua pela lógica real de busca de dados
-  const professor = {
-    nome: 'Prof. Carlos',
-    email: 'carlos.prof@spacelearn.com',
-    materia: 'Foguetes e Propulsão',
-  };
+  // A informação de matéria principal não vem diretamente do objeto user do AuthContext.
+  // Isso precisaria ser carregado separadamente se necessário.
 
-  const handleLogout = () => {
+  const handleLogout = async () => { // Marcar como async
     Alert.alert('Sair', 'Tem certeza que deseja sair da conta?', [
       { text: 'Cancelar', style: 'cancel' },
-      // Idealmente, o professor seria redirecionado para uma tela de login específica para professores
-      // ou uma tela de login genérica que saiba lidar com diferentes tipos de usuários.
-      { text: 'Sair', onPress: () => router.replace('/login') }, // Ajuste conforme sua rota de login
+      { text: 'Sair', onPress: async () => {
+          await logout(); // Chamar a função logout do AuthContext
+          // A função logout no AuthContext já cuida do redirecionamento para /login
+        }
+      },
     ]);
   };
 
@@ -136,12 +136,14 @@ export default function ContaProfessorScreen() {
           size={100}
           style={[baseStyles.avatar, { color: theme.colors.textPrimary }]}
         />
-        <Text style={[baseStyles.name, { color: theme.colors.textPrimary }]}>{professor.nome}</Text>
-        <Text style={[baseStyles.role, { color: theme.colors.textSecondary }]}>Professor</Text>
-        <Text style={[baseStyles.email, { color: theme.colors.textSecondary }]}>Email: {professor.email}</Text>
+        <Text style={[baseStyles.name, { color: theme.colors.textPrimary }]}>{user?.nome || 'Nome do Professor'}</Text>
+        <Text style={[baseStyles.role, { color: theme.colors.textSecondary }]}>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Perfil'}</Text>
+        <Text style={[baseStyles.email, { color: theme.colors.textSecondary }]}>Email: {user?.email || 'professor@example.com'}</Text>
+        {/* A matéria principal precisaria de uma lógica diferente para ser exibida,
+            pois não está no objeto 'user' básico do AuthContext.
         <Text style={[baseStyles.infoDetail, { color: theme.colors.textSecondary }]}>
           Matéria Principal: {professor.materia}
-        </Text>
+        </Text> */}
       </View>
 
       {/* Blocos de ações */}

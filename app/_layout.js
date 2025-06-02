@@ -1,21 +1,29 @@
 // app/_layout.js
 import { Stack } from 'expo-router';
+import { AuthProvider } from '../src/context/AuthContext';
 import { ThemeProvider } from '../src/context/ThemeContext';
 
 export default function RootLayout() {
+  // console.log('--- [RootLayout] RootLayout EXECUTANDO ---');
   return (
     <ThemeProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false, // Oculta o header globalmente
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-        <Stack.Screen name="(tabs)" />
-        {/* Removidos os caminhos antigos do professor */}
-      </Stack>
+      {/* Nenhum comentário // ou texto solto deve estar aqui */}
+      <AuthProvider>
+        {/* Nenhum comentário // ou texto solto deve estar aqui */}
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(professor)" />
+        </Stack>
+        {/* Nenhum comentário // ou texto solto deve estar aqui */}
+      </AuthProvider>
+      {/* Nenhum comentário // ou texto solto deve estar aqui */}
     </ThemeProvider>
   );
 }
