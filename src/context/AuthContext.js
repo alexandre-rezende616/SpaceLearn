@@ -46,44 +46,50 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     // Garante que o estado de navegação e o router estejam prontos,
     // e que o carregamento inicial do token/usuário esteja concluído.
-    console.log(`>>> [AuthContext] useEffect TRIGGERED. User: ${user ? user.id : null}, Segments: ${segments.join('/')}, isLoading: ${isLoading}, NavKey: ${navigationState?.key}, NavStale: ${navigationState?.stale}`);
+    console.log(`>>> [AuthContext] useEffect (navegação) TRIGGERED. User: ${user ? user.id : null}, Segments: ${segments.join('/')}, isLoading: ${isLoading}, NavState: ${JSON.stringify(navigationState)}`);
 
     // Verificação de navigationState.stale
-    if (isLoading || !router || !navigationState?.key || navigationState.stale === true) {
-      console.log('[AuthContext] useEffect: Still aguardando (isLoading/router/navState).');
+    // Adicionada verificação explícita para navigationState e navigationState.key
+    if (isLoading || !router || !navigationState || !navigationState.key) {
+      console.log('[AuthContext] useEffect (navegação): Ainda aguardando (isLoading/router/navigationState/navigationState.key).');
+      return;
+    }
+    // Se navigationState.stale for um problema, podemos reintroduzir a verificação depois.
+    // Esta verificação separada ajuda a isolar se 'stale' é o bloqueador.
+    if (navigationState.stale === true) {
+        console.log('[AuthContext] useEffect (navegação): navigationState.stale é true. Aguardando.');
       return;
     }
 
-    console.log('[AuthContext] useEffect: Navegação pronta! User:', user ? {id: user.id, role: user.role} : null, 'Segments:', segments);
+    console.log('[AuthContext] useEffect (navegação): Navegação pronta! User:', user ? {id: user.id, role: user.role} : null, 'Segments:', segments);
 
     // Lógica de redirecionamento reativada
     // Constrói a rota atual a partir dos segmentos. Ex: 'login', '(tabs)/home', 'conta'
     const currentRoute = segments.join('/') || 'index'; 
     // Define se a rota atual é uma rota de autenticação explícita
     const isAuthRoute = currentRoute === 'login' || currentRoute === 'register';
-
     if (!user) { // Se NÃO houver usuário logado
       // Se não estiver numa rota de autenticação (login, register) E não for a tela inicial (index)
       if (!isAuthRoute && currentRoute !== 'index') {
-        console.log(`[AuthContext] useEffect: No user, NOT on auth route or index (current: ${currentRoute}). Redirecting to /login.`);
+        console.log(`[AuthContext] useEffect (navegação): No user, NOT on auth route or index (current: ${currentRoute}). Redirecting to /login.`);
         router.replace('/login');
       } else {
-        console.log(`[AuthContext] useEffect: No user, but on auth route or index (current: ${currentRoute}). No redirect from here.`);
+        console.log(`[AuthContext] useEffect (navegação): No user, but on auth route or index (current: ${currentRoute}). No redirect from here.`);
       }
     } else { // Se HOUVER usuário logado
       // Se o usuário estiver logado MAS estiver numa rota de autenticação (login, register) ou na tela inicial (index)
       if (isAuthRoute || currentRoute === 'index') {
-        console.log(`[AuthContext] useEffect: User logged in (role: ${user.role}), but on auth route or index (current: ${currentRoute}). Redirecting based on role.`);
+        console.log(`[AuthContext] useEffect (navegação): User logged in (role: ${user.role}), but on auth route or index (current: ${currentRoute}). Redirecting based on role.`);
         if (user.role === 'aluno') {
           router.replace('/(tabs)/home');
         } else if (user.role === 'professor') {
           router.replace('/(professor)/painel');
         } else {
-          console.log(`[AuthContext] useEffect: User has unknown role '${user.role}'. Redirecting to / from auth/index.`);
+          console.log(`[AuthContext] useEffect (navegação): User has unknown role '${user.role}'. Redirecting to / from auth/index.`);
           router.replace('/'); // Ou uma rota padrão para usuários autenticados
         }
       } else {
-        console.log(`[AuthContext] useEffect: User logged in, NOT on auth route or index (current: ${currentRoute}). No redirect from here.`);
+        console.log(`[AuthContext] useEffect (navegação): User logged in, NOT on auth route or index (current: ${currentRoute}). No redirect from here.`);
       }
     }
   }, [user, segments, router, navigationState, isLoading]); // MODIFICADO: navigationState em vez de navigationState?.key

@@ -3,7 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../../context/ThemeContext';
-import { fetchMaterias } from '../../../services/materiaService';
+import { fetchMaterias, deleteMateria } from '../../../services/materiaService'; // Importar deleteMateria
 
 const getStyles = (theme) => StyleSheet.create({
   screenContainer: {
@@ -54,11 +54,6 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.textPrimary,
     marginBottom: 5,
   },
-  materiaDescricao: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: 8,
-  },
   materiaProfessor: {
     fontSize: 13,
     color: theme.colors.textDisabled,
@@ -69,6 +64,26 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 16,
     color: theme.colors.textSecondary,
   },
+  materiaDescricao: { // Movido para cá para consistência, pode ser o mesmo estilo
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: 8,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end', // Alinha botões à direita
+    marginTop: 10,
+  },
+  actionButton: {
+    marginLeft: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20, // Bordas mais arredondadas
+  },
+  deleteButtonText: {
+    color: theme.colors.buttonSecondaryText, // Texto branco para botão de perigo
+    fontWeight: 'bold',
+  },
 });
 
 export default function GerenciarMateriasScreen() {
@@ -78,6 +93,7 @@ export default function GerenciarMateriasScreen() {
 
   const [materias, setMaterias] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false); // Estado para feedback de exclusão
 
   const carregarMaterias = () => {
     setLoading(true);
@@ -97,16 +113,47 @@ export default function GerenciarMateriasScreen() {
     }, [])
   );
 
-  if (loading) {
+  const handleConfirmDelete = (materiaId, materiaNome) => {
+    Alert.alert(
+      'Confirmar Exclusão',
+      `Tem certeza que deseja excluir a matéria "${materiaNome}"? Esta ação não pode ser desfeita.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteMateria(materiaId);
+              Alert.alert('Sucesso', `Matéria "${materiaNome}" excluída.`);
+              carregarMaterias(); // Recarrega a lista
+            } catch (err) {
+              Alert.alert('Erro ao Excluir', err.message || 'Não foi possível excluir a matéria.');
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading && materias.length === 0) { // Mostra loading inicial apenas se não houver matérias
     return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.accentPrimary} /></View>;
   }
 
   const renderMateria = ({ item }) => (
     <View style={styles.materiaCard}>
       <Text style={styles.materiaNome}>{item.nome}</Text>
-      {item.descricao ? <Text style={styles.materiaDescricao}>{item.descricao}</Text> : null}
-      {item.professorResponsavel ? <Text style={styles.materiaProfessor}>Prof. Responsável: {item.professorResponsavel}</Text> : null}
-      {/* TODO: Adicionar botões de Editar/Excluir aqui */}
+      {item.descricao ? <Text style={styles.materiaDescricao}>{item.descricao}</Text> : <Text style={styles.materiaDescricao}>Sem descrição.</Text>}
+      {item.professorResponsavel ? <Text style={styles.materiaProfessor}>Prof. Responsável: {item.professorResponsavel}</Text> : <Text style={styles.materiaProfessor}>Professor não definido.</Text>}
+      <View style={styles.actionsContainer}>
+        {/* Futuramente: Botão de Editar */}
+        <TouchableOpacity style={[styles.actionButton, { backgroundColor: theme.colors.accentSecondary }]} onPress={() => handleConfirmDelete(item._id, item.nome)} disabled={deleting}>
+          <Text style={styles.deleteButtonText}>{deleting ? 'Excluindo...' : 'Excluir'}</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -119,11 +166,12 @@ export default function GerenciarMateriasScreen() {
           <MaterialCommunityIcons name="plus-circle" size={30} color={theme.colors.accentPrimary} />
         </TouchableOpacity>
       </View>
+      {loading && <ActivityIndicator style={{ marginVertical: 10 }} color={theme.colors.accentPrimary} />}
       {materias.length > 0 ? (
         <FlatList
           data={materias}
           renderItem={renderMateria}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id.toString()}
           contentContainerStyle={styles.listContainer}
         />
       ) : (

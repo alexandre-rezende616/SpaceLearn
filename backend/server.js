@@ -82,10 +82,36 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Middleware para verificar token JWT e papel do usuário
+const authenticateToken = (requiredRole = null) => {
+  return (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Espera "Bearer TOKEN"
+
+    if (token == null) return res.sendStatus(401); // Não autorizado se não houver token
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        console.error("Erro na verificação do JWT:", err.message);
+        return res.sendStatus(403); // Token inválido ou expirado
+      }
+
+      // Verificar papel, se um papel específico for requerido pela rota
+      if (requiredRole && decoded.role !== requiredRole) {
+        return res.status(403).json({ message: `Acesso negado. Requer papel: ${requiredRole}` });
+      }
+
+      req.user = decoded; // Adiciona os dados do usuário decodificados (userId, role) ao objeto req
+      next(); // Passa para a próxima rota ou middleware
+    });
+  };
+};
+
 // Rota para LISTAR todas as matérias
-app.get('/api/materias', async (req, res) => {
+// Qualquer usuário logado pode listar matérias
+app.get('/api/materias', authenticateToken(), async (req, res) => {
   try {
-    console.log('GET /api/materias solicitado');
+    console.log('GET /api/materias solicitado por:', req.user); // req.user agora está disponível
     const materias = await Materia.find().sort({ nome: 1 }); // Ordena por nome
     res.status(200).json(materias);
   } catch (error) {
@@ -95,8 +121,8 @@ app.get('/api/materias', async (req, res) => {
 });
 
 // Rota para CRIAR uma nova matéria
-// TODO: Proteger esta rota para que apenas professores possam criar matérias
-app.post('/api/materias', async (req, res) => {
+// Apenas professores podem criar matérias
+app.post('/api/materias', authenticateToken('professor'), async (req, res) => {
   try {
     console.log('POST /api/materias solicitado com corpo:', req.body);
     const { nome, descricao } = req.body;
@@ -116,6 +142,23 @@ app.post('/api/materias', async (req, res) => {
   }
 });
 
+// Rota para DELETAR uma matéria por ID
+// Apenas professores podem deletar matérias
+app.delete('/api/materias/:id', authenticateToken('professor'), async (req, res) => {
+  try {
+    const materiaId = req.params.id;
+    const materiaDeletada = await Materia.findByIdAndDelete(materiaId);
+
+    if (!materiaDeletada) {
+      return res.status(404).json({ message: 'Matéria não encontrada.' });
+    }
+    res.status(200).json({ message: 'Matéria deletada com sucesso.', materia: materiaDeletada });
+  } catch (error) {
+    console.error("Erro ao deletar matéria:", error);
+    res.status(500).json({ message: 'Erro ao deletar matéria.', error: error.message });
+  }
+});
+
 // Rota de teste
 app.get('/', (req, res) => {
   res.send('Servidor SpaceLearn Backend está no ar!');
@@ -124,4 +167,4 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor backend rodando em http://localhost:${port}`);
 });
-// Futuramente: Adicionar rotas para GET /api/materias/:id, PUT /api/materias/:id, DELETE /api/materias/:id
+// Futuramente: Adicionar rotas para GET /api/materias/:id (detalhes), PUT /api/materias/:id (atualizar)
