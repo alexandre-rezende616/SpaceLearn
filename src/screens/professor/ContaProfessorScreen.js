@@ -105,8 +105,14 @@ export default function ContaProfessorScreen() {
     Alert.alert('Sair', 'Tem certeza que deseja sair da conta?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Sair', onPress: async () => {
-          await logout(); // Chamar a função logout do AuthContext
-          // A função logout no AuthContext já cuida do redirecionamento para /login
+          try {
+            await logout(); // Chamar a função logout do AuthContext
+            // A função logout no AuthContext deve cuidar do redirecionamento.
+            // Se não estiver redirecionando, o problema está na implementação do logout no AuthContext.
+          } catch (error) {
+            console.error("Erro ao fazer logout:", error);
+            Alert.alert("Erro", error.message || "Não foi possível sair da conta. Verifique o console.");
+          }
         }
       },
     ]);

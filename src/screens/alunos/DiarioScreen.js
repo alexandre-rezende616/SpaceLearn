@@ -63,16 +63,24 @@ const getStyles = (theme) => StyleSheet.create({
     padding: 15,
     marginHorizontal: 16,
     marginBottom: 10,
+    position: 'relative', // Adicionado para posicionamento absoluto do botão de excluir
   },
   anotacaoTexto: {
     fontSize: 16,
     color: theme.colors.textPrimary,
+    paddingRight: 30, // Espaço para o botão de excluir não sobrepor o texto
   },
   anotacaoData: {
     fontSize: 12,
     color: theme.colors.textSecondary,
     marginTop: 5,
     textAlign: 'right',
+  },
+  deleteButtonContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 5, // Área de toque um pouco maior
   },
   emptyStateContainer: {
     flex: 1,
@@ -101,12 +109,26 @@ export default function DiarioScreen() {
     const anotacao = {
       id: Date.now().toString(),
       texto: novaAnotacao,
-      data: new Date().toLocaleString(),
+      data: new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
     };
     setAnotacoesSalvas([anotacao, ...anotacoesSalvas]);
     setNovaAnotacao('');
     Keyboard.dismiss(); // Fecha o teclado
     Alert.alert('Sucesso', 'Anotação salva no seu diário!');
+  };
+
+  const handleExcluirAnotacao = (idParaExcluir) => {
+    Alert.alert('Excluir Anotação', 'Tem certeza que deseja excluir esta anotação?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: () => {
+          const novasAnotacoes = anotacoesSalvas.filter(anotacao => anotacao.id !== idParaExcluir);
+          setAnotacoesSalvas(novasAnotacoes);
+        },
+      },
+    ]);
   };
 
   return (
@@ -139,6 +161,12 @@ export default function DiarioScreen() {
             <View style={styles.anotacaoCard}>
               <Text style={styles.anotacaoTexto}>{item.texto}</Text>
               <Text style={styles.anotacaoData}>{item.data}</Text>
+              <TouchableOpacity
+                style={styles.deleteButtonContainer}
+                onPress={() => handleExcluirAnotacao(item.id)}
+              >
+                <Ionicons name="trash-outline" size={24} color={theme.colors.accentSecondary || 'red'} />
+              </TouchableOpacity>
             </View>
           )}
         />

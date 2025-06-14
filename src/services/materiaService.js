@@ -15,7 +15,13 @@ export const fetchMaterias = async () => {
     });
 
     if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
+      const errorText = await response.text();
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.error || errorData.message || `Erro HTTP: ${response.status} - ${errorText}`);
+      } catch (e) {
+        throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+      }
     }
     const data = await response.json();
     console.log('Matérias recebidas do backend:', data);
@@ -31,6 +37,7 @@ export const criarMateria = async (novaMateriaData) => {
   try {
     console.log(`Criando matéria em: ${API_BASE_URL}/materias com dados:`, novaMateriaData);
     const token = await AsyncStorage.getItem('userToken');
+    console.log('Token enviado para criarMateria:', token);
     const response = await fetch(`${API_BASE_URL}/materias`, {
       method: 'POST',
       headers: {
@@ -40,8 +47,16 @@ export const criarMateria = async (novaMateriaData) => {
       body: JSON.stringify(novaMateriaData),
     });
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
+      // Tenta ler a resposta como texto, pois erros como 403 podem não retornar JSON.
+      const errorText = await response.text();
+      try {
+        // Tenta analisar como JSON se possível, para mensagens de erro estruturadas do backend.
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.error || errorData.message || `Erro HTTP: ${response.status} - ${errorText}`);
+      } catch (e) {
+        // Se não for JSON, usa o texto do erro diretamente.
+        throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+      }
     }
     const data = await response.json();
     console.log('Matéria criada no backend:', data);
@@ -66,13 +81,20 @@ export const deleteMateria = async (materiaId) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: `Erro HTTP: ${response.status}` })); // Tenta pegar JSON, senão usa status
-      throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+      const errorText = await response.text();
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.error || errorData.message || `Erro HTTP: ${response.status} - ${errorText}`);
+      } catch (e) {
+        throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+      }
     }
 
     // Para DELETE, a resposta pode não ter um corpo JSON ou ser um 204 No Content.
     // Se houver um corpo, como a mensagem de sucesso, podemos retorná-lo.
-    return await response.json(); // Ou apenas retornar um status de sucesso se não houver corpo
+    // Se a resposta for 204, response.json() pode falhar.
+    if (response.status === 204) return { success: true, message: 'Matéria deletada com sucesso.' }; // Retorno customizado para 204
+    return await response.json();
   } catch (error) {
     console.error('Erro ao deletar matéria:', error);
     throw error;

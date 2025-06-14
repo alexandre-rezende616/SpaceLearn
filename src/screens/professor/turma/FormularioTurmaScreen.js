@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../../context/ThemeContext';
-import { fetchMaterias } from '../../../services/materiaService';
-import { criarTurma } from '../../../services/turmaService';
+import materiasFromMock from '../../../data/materiasMock'; // Usar dados mocados
+// import { criarTurma } from '../../../services/turmaService'; // Comentado, pois não vamos realmente criar
 
 const getStyles = (theme) => StyleSheet.create({
   screenContainer: {
@@ -16,7 +16,7 @@ const getStyles = (theme) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 35, // Aumentado para descer o conteúdo do header
     paddingBottom: 8,
     backgroundColor: theme.colors.backgroundSecondary,
     borderBottomWidth: 1,
@@ -90,20 +90,24 @@ export default function FormularioTurmaScreen() {
   const styles = getStyles(theme);
 
   const [nome, setNome] = useState('');
-  const [selectedMateriaId, setSelectedMateriaId] = useState(null);
+  const [selectedMateriaId, setSelectedMateriaId] = useState('');
   const [materias, setMaterias] = useState([]);
   const [loadingMaterias, setLoadingMaterias] = useState(true);
 
   useEffect(() => {
-    fetchMaterias()
-      .then(data => {
-        setMaterias(data);
-        if (data.length > 0) {
-          setSelectedMateriaId(data[0].id); // Seleciona a primeira matéria por padrão
-        }
-      })
-      .catch(err => Alert.alert("Erro", "Não foi possível carregar as matérias."))
-      .finally(() => setLoadingMaterias(false));
+    // Simular carregamento de matérias
+    const carregarMateriasMocadas = async () => {
+      setLoadingMaterias(true);
+      await new Promise(resolve => setTimeout(resolve, 300)); // Simula atraso
+      setMaterias(materiasFromMock);
+      if (materiasFromMock.length > 0) {
+        setSelectedMateriaId(materiasFromMock[0].id);
+      } else {
+        setSelectedMateriaId('');
+      }
+      setLoadingMaterias(false);
+    };
+    carregarMateriasMocadas();
   }, []);
 
   const handleSalvarTurma = async () => {
@@ -115,12 +119,13 @@ export default function FormularioTurmaScreen() {
     const novaTurmaData = { nome, materiaId: selectedMateriaId };
 
     try {
-      const turmaCriada = await criarTurma(novaTurmaData);
-      Alert.alert('Sucesso', `Turma "${turmaCriada.nome}" criada!`);
+      // const turmaCriada = await criarTurma(novaTurmaData); // Comentado
+      console.log("Tentativa de criar turma (simulado):", novaTurmaData);
+      Alert.alert('Sucesso (Simulado)', `Turma "${nome}" seria criada para a matéria selecionada!`);
       router.back(); // Volta para a tela anterior
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível criar a turma.');
-      console.error("Erro ao criar turma:", error);
+      Alert.alert('Erro (Simulado)', 'Não foi possível criar a turma.');
+      console.error("Erro ao simular criação de turma:", error);
     }
   };
 
@@ -131,7 +136,7 @@ export default function FormularioTurmaScreen() {
   return (
     <View style={styles.screenContainer}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.replace('/(professor)/turmas')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={28} color={theme.colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nova Turma</Text>
@@ -148,8 +153,11 @@ export default function FormularioTurmaScreen() {
             style={styles.picker}
             dropdownIconColor={theme.colors.textPrimary} // Cor do ícone do dropdown
           >
+            {/* Adicionar um item placeholder caso nenhuma matéria esteja selecionada ou disponível */}
+            {materias.length === 0 && <Picker.Item label="Nenhuma matéria disponível" value="" color={theme.colors.textPlaceholder || '#999'} />}
+            {materias.length > 0 && !selectedMateriaId && <Picker.Item label="Selecione uma matéria..." value="" color={theme.colors.textPlaceholder || '#999'} />}
             {materias.map(materia => (
-              <Picker.Item key={materia.id} label={materia.nome} value={materia.id} color={theme.isDark ? theme.colors.textPrimary : undefined} />
+              <Picker.Item key={materia.id} label={materia.nome} value={materia.id} color={theme.isDark ? '#000000' : theme.colors.textPrimary} />
             ))}
           </Picker>
         </View>

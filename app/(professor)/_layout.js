@@ -1,4 +1,4 @@
-// c:\Users\xandi\OneDrive\Desktop\SpaceLearn\app\(professor)\_layout.js
+// _layout.js
 import { Tabs } from 'expo-router';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../src/context/ThemeContext';
@@ -62,6 +62,8 @@ export default function Layout() {
         name="conta" // Corresponde a app/(professor)/conta.js
         options={{
           href: null, // Oculta esta tela da barra de abas
+          href: null, // Mantém oculta da lista de abas
+          tabBarStyle: { display: 'none' }, // Oculta a barra de abas quando esta tela está ativa
         }}
       />
        <Tabs.Screen
@@ -70,14 +72,20 @@ export default function Layout() {
           href: null, // Oculta o index da barra de abas
         }}
       />
-
-      {/* Se houver QUALQUER OUTRO arquivo ou diretório em app/(professor)/ que não deva ser uma aba,
-          adicione uma entrada similar aqui com href: null. Por exemplo:
       <Tabs.Screen
-        name="nomeDeOutroArquivoOuDiretorio"
+        name="turma" // Corresponde ao diretório app/(professor)/turma
+         name="turma/[id]" // Referencia diretamente a rota dinâmica
         options={{ href: null }}
       />
-      */}
+      <Tabs.Screen
+        name="materia/nova" // Corresponde ao diretório app/(professor)/materia
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="turma/nova" // Oculta a rota específica do formulário de nova turma
+        options={{ href: null }}
+      />
+      {/* Adicione aqui outras telas ou diretórios que não devem ser abas */}
     </Tabs>
   );
 }

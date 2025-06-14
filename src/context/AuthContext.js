@@ -13,7 +13,6 @@ export function AuthProvider({ children }) {
   // console.log('--- [AuthContext] AuthProvider EXECUTANDO (TOPO DA FUNÇÃO) ---');
   const [user, setUser] = useState(null); // Armazenará o objeto do usuário { id, nome, email, role }
   const [token, setToken] = useState(null);
-
   const router = useRouter();
   const segments = useSegments();
   const navigationState = useRootNavigationState();
@@ -43,8 +42,7 @@ export function AuthProvider({ children }) {
     loadAuthData();
   }, []);
 
-  useEffect(() => {
-    // Garante que o estado de navegação e o router estejam prontos,
+    useEffect(() => {    // Garante que o estado de navegação e o router estejam prontos,
     // e que o carregamento inicial do token/usuário esteja concluído.
     console.log(`>>> [AuthContext] useEffect (navegação) TRIGGERED. User: ${user ? user.id : null}, Segments: ${segments.join('/')}, isLoading: ${isLoading}, NavState: ${JSON.stringify(navigationState)}`);
 
@@ -72,7 +70,7 @@ export function AuthProvider({ children }) {
       // Se não estiver numa rota de autenticação (login, register) E não for a tela inicial (index)
       if (!isAuthRoute && currentRoute !== 'index') {
         console.log(`[AuthContext] useEffect (navegação): No user, NOT on auth route or index (current: ${currentRoute}). Redirecting to /login.`);
-        router.replace('/login');
+        router.replace('/login'); 
       } else {
         console.log(`[AuthContext] useEffect (navegação): No user, but on auth route or index (current: ${currentRoute}). No redirect from here.`);
       }
@@ -119,9 +117,10 @@ export function AuthProvider({ children }) {
       console.error('--- [AuthContext] Failed to remove auth data from storage during logout', e);
     }
     
-    console.log('--- [AuthContext] Calling router.replace("/login") from logout function ---');
-    router.replace('/login');
-    console.log('--- [AuthContext] router.replace("/login") CALLED from logout function ---');
+      console.log('--- [AuthContext] router.replace("/(auth)/login") CALLED from logout function ---');
+      setTimeout(() => {
+        router.replace('/login');
+      }, 50);
   };
 
   // AuthProvider DEVE SEMPRE renderizar seus children para que o Expo Router inicialize.

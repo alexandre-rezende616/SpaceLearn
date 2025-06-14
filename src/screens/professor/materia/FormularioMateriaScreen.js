@@ -1,8 +1,8 @@
 // c:\Users\xandi\SpaceLearn\src\screens\professor\materia\FormularioMateriaScreen.js
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../../context/ThemeContext';
 import { criarMateria } from '../../../services/materiaService';
 
@@ -15,7 +15,7 @@ const getStyles = (theme) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 38,
     paddingBottom: 8,
     backgroundColor: theme.colors.backgroundSecondary,
     borderBottomWidth: 1,
@@ -67,6 +67,9 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  disabledButton: { // Estilo para o botão desabilitado
+    backgroundColor: theme.colors.buttonDisabledBackground || '#cccccc', // Use uma cor do tema ou um fallback
+  }
 });
 
 export default function FormularioMateriaScreen() {
@@ -77,29 +80,36 @@ export default function FormularioMateriaScreen() {
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
   const [professorResponsavel, setProfessorResponsavel] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false); // Estado para feedback de envio
 
   const handleSalvarMateria = async () => {
+    if (isSubmitting) return; // Evita múltiplos envios se o botão não estiver desabilitado
+
     if (!nome.trim()) {
       Alert.alert('Erro', 'O nome da matéria é obrigatório.');
       return;
     }
 
     const novaMateriaData = { nome, descricao, professorResponsavel };
+    setIsSubmitting(true); // Inicia o estado de envio
 
     try {
       const materiaCriada = await criarMateria(novaMateriaData);
       Alert.alert('Sucesso', `Matéria "${materiaCriada.nome}" criada!`);
       router.back(); // Volta para a tela anterior (que será a lista de matérias)
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível criar a matéria.');
+      // Tenta pegar uma mensagem de erro mais específica, se disponível
+      const errorMessage = error.response?.data?.message || error.message || 'Não foi possível criar a matéria.';
+      Alert.alert('Erro ao Criar Matéria', errorMessage);
       console.error("Erro ao criar matéria:", error);
+    } finally {
+      setIsSubmitting(false); // Finaliza o estado de envio, seja sucesso ou erro
     }
   };
-
   return (
     <View style={styles.screenContainer}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.replace('/(professor)/turmas')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={28} color={theme.colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nova Matéria</Text>
@@ -114,8 +124,12 @@ export default function FormularioMateriaScreen() {
         <Text style={styles.formLabel}>Professor Responsável</Text>
         <TextInput style={styles.input} value={professorResponsavel} onChangeText={setProfessorResponsavel} placeholder="Ex: Prof. Dr. Albert Einstein" placeholderTextColor={theme.colors.textSecondary} />
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSalvarMateria}>
-          <Text style={styles.saveButtonText}>Salvar Matéria</Text>
+        <TouchableOpacity
+          style={[styles.saveButton, isSubmitting && styles.disabledButton]}
+          onPress={handleSalvarMateria}
+          disabled={isSubmitting} // Desabilita o botão durante o envio
+        >
+          <Text style={styles.saveButtonText}>{isSubmitting ? 'Salvando...' : 'Salvar Matéria'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

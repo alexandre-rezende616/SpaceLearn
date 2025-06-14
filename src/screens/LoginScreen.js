@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react'; // Adicionado React para clareza
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { loginUser } from '../services/authService'; // Importar a função de login
 // import AsyncStorage from '@react-native-async-storage/async-storage'; // O AuthContext cuidará disso
 import { useAuth } from '../context/AuthContext'; // Importar o hook useAuth
 
@@ -12,8 +11,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  // O tipo de usuário será determinado pelo backend após o login
-  // const [tipoUsuario, setTipoUsuario] = useState('aluno');
+  const [tipoUsuario, setTipoUsuario] = useState(null); // Inicialmente nenhum tipo selecionado
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth(); // Obter a função login do contexto
 
@@ -22,27 +20,30 @@ export default function LoginScreen() {
       Alert.alert('Erro', 'Por favor, preencha email e senha.');
       return;
     }
-    setIsLoading(true);
-    try {
-      const data = await loginUser({ email, senha });
-      // Chamar a função login do AuthContext
-      await login(data.user, data.token);
-
-      // O Alert e o redirecionamento agora são gerenciados pelo AuthContext ou podem ser mantidos aqui se preferir um feedback imediato
-      Alert.alert('Sucesso!', data.message || 'Login bem-sucedido!');
-
-      // O useEffect no AuthContext cuidará do redirecionamento, mas podemos forçar aqui também
-      // if (data.user.role === 'aluno') {
-      //   router.replace('/(tabs)/home');
-      // } else if (data.user.role === 'professor') {
-      //   router.replace('/(professor)/painel');
-      // }
-
-    } catch (error) {
-      Alert.alert('Erro no Login', error.message || 'Não foi possível fazer login.');
-    } finally {
-      setIsLoading(false);
+    if (!tipoUsuario) {
+      Alert.alert('Erro', 'Por favor, selecione o tipo de usuário.');
+      return;
     }
+  
+      setIsLoading(true);
+      try {
+        // SIMULAÇÃO:  Substitua por sua lógica de "autenticação local" (se necessário)
+        const userData = {
+          id: 'user-id-simulado',
+          nome: 'Usuário Simulado',
+          email: email,
+          role: tipoUsuario
+        };
+        const userToken = 'token-simulado';
+  
+        await login(userData, userToken);
+        // Opcional: Feedback ao usuário (o AuthContext também pode redirecionar)
+        // Alert.alert('Sucesso!', 'Login realizado com sucesso!');
+      } catch (error) {
+        Alert.alert('Erro no Login', 'Falha na autenticação simulada.');
+      } finally {
+        setIsLoading(false);
+      }
   };
 
   return (
@@ -79,7 +80,7 @@ export default function LoginScreen() {
       </View>
 
       {/* Seleção do tipo de usuário */}
-      {/* <View style={styles.tipoUsuarioContainer}>
+      <View style={styles.tipoUsuarioContainer}>
         <TouchableOpacity
           style={[
             styles.tipoUsuarioButton,
@@ -112,7 +113,7 @@ export default function LoginScreen() {
             Professor
           </Text>
         </TouchableOpacity>
-      </View> */}
+      </View>
 
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
         <Text style={styles.loginButtonText}>{isLoading ? 'Entrando...' : 'Entrar'}</Text>

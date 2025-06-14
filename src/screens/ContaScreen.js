@@ -14,11 +14,11 @@ const createStyles = (theme) => StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.backgroundPrimary,
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 70, // Aumentado para descer todo o conteúdo
   },
   backButton: {
     position: 'absolute',
-    top: 10, // Ajustado para o novo paddingTop do container
+    top: 40, // Aumentado para descer o botão abaixo da barra de status
     left: 20,
     padding: 10, // Área de toque maior
     zIndex: 1,
@@ -60,7 +60,7 @@ const createStyles = (theme) => StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 10, // Ajustado para padding interno
     paddingVertical: 5,    // Ajustado para padding interno
-    gap: 0, // Removido gap, usando margin no actionItem
+    gap: 0, 
   },
   actionItem: {
     paddingVertical: 15, // Aumentado para melhor toque
@@ -115,8 +115,9 @@ export default function ContaScreen() {
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Sair', onPress: async () => {
           await logout(); // Chamar a função logout do AuthContext
-          // A função logout no AuthContext já cuida do redirecionamento para /login
-        } 
+          // Navegação direta para a tela de login após o logout
+          router.replace('/login');
+        }
       },
     ]);
   };

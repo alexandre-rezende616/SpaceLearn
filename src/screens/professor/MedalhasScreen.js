@@ -1,8 +1,9 @@
 import ProfessorAccountIcon from '@/components/ProfessorAccountIcon';
 import alunosPorTurma from '@/data/alunosPorTurma';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 import { useState } from 'react';
-import { Alert, FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function MedalhasScreen() {
@@ -17,7 +18,7 @@ export default function MedalhasScreen() {
 
   const handleSelectTurma = (turma) => {
     setSelectedTurma(turma);
-    setSelectedAluno(null);
+    setSelectedAluno(null); // Reseta o aluno selecionado quando a turma muda
   };
 
   const handleSelectAluno = (aluno) => {
@@ -28,19 +29,20 @@ export default function MedalhasScreen() {
     if (selectedAluno && medalName) {
       const newMedal = {
         id: Date.now().toString(),
-        aluno: selectedAluno,
+        aluno: selectedAluno, // selectedAluno agora é o nome completo
         turma: selectedTurma,
         medalha: medalName,
         descricao: descricao,
-        data: new Date().toLocaleDateString(),
+        data: new Date().toLocaleDateString('pt-BR'), // Formato de data localizado
       };
       setAssignedMedals(prevMedals => [newMedal, ...prevMedals]);
       setMedalName('');
       setDescricao('');
+      // Não resetar selectedTurma, apenas selectedAluno
       setSelectedAluno(null);
       Alert.alert('Sucesso!', `Medalha "${medalName}" atribuída a ${selectedAluno}.`);
     } else {
-      Alert.alert('Atenção', 'Por favor, selecione um aluno e defina o nome da medalha.');
+      Alert.alert('Atenção', 'Por favor, selecione uma turma, um aluno e defina o nome da medalha.');
     }
   };
 
@@ -74,41 +76,42 @@ export default function MedalhasScreen() {
 
         {/* Seleção de Turma */}
         <Text style={styles.subtitle}>1. Selecione a Turma:</Text>
-        <FlatList
-          horizontal
-          data={turmas}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.selectionButton, selectedTurma === item && styles.selectedButton]}
-              onPress={() => handleSelectTurma(item)}
-            >
-              <Text style={[styles.selectionButtonText, selectedTurma === item && styles.selectedButtonText]}>{item}</Text>
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item}
-          showsHorizontalScrollIndicator={false}
-          style={styles.horizontalList}
-        />
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={selectedTurma}
+            style={styles.picker}
+            onValueChange={(itemValue) => handleSelectTurma(itemValue)}
+            dropdownIconColor={theme.colors.textPrimary}
+          >
+            <Picker.Item label="Selecione uma turma..." value={null} color={theme.isDark ? '#555555' : (theme.colors.textPlaceholder || '#999')} />
+            {turmas.map((turma) => (
+              <Picker.Item key={turma} label={turma} value={turma} color={theme.isDark ? '#000000' : theme.colors.textPrimary} />
+            ))}
+          </Picker>
+        </View>
 
         {/* Seleção de Aluno */}
         {selectedTurma && (
           <>
             <Text style={styles.subtitle}>2. Selecione o Aluno da Turma {selectedTurma}:</Text>
-            <FlatList
-              horizontal
-              data={alunosPorTurma[selectedTurma]}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.selectionButton, selectedAluno === item.nome && styles.selectedButton]}
-                  onPress={() => handleSelectAluno(item.nome)}
-                >
-                  <Text style={[styles.selectionButtonText, selectedAluno === item.nome && styles.selectedButtonText]}>{item.nome}</Text>
-                </TouchableOpacity>
-              )}
-              keyExtractor={(item) => item.id.toString()}
-              showsHorizontalScrollIndicator={false}
-              style={styles.horizontalList}
-            />
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedAluno}
+                style={styles.picker}
+                onValueChange={(itemValue) => handleSelectAluno(itemValue)}
+                enabled={!!selectedTurma}
+                dropdownIconColor={theme.colors.textPrimary}
+              >
+                <Picker.Item label="Selecione um aluno..." value={null} color={theme.isDark ? '#555555' : (theme.colors.textPlaceholder || '#999')} />
+                {alunosPorTurma[selectedTurma] && alunosPorTurma[selectedTurma].map((aluno) => (
+                  <Picker.Item
+                    key={aluno.id.toString()}
+                    label={`${aluno.nome} ${aluno.sobrenome}`}
+                    value={`${aluno.nome} ${aluno.sobrenome}`}
+                    color={theme.isDark ? '#000000' : theme.colors.textPrimary} />
+                ))}
+              </Picker>
+            </View>
           </>
         )}
 
@@ -178,7 +181,7 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginBottom: 10,
-    color: theme.colors.textPrimary, // Alterado para garantir que o texto digitado seja visível no tema escuro
+    color: theme.colors.textPrimary,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
@@ -188,27 +191,18 @@ const getStyles = (theme) => StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
-  horizontalList: {
+  pickerContainer: {
+    backgroundColor: theme.colors.inputBackground,
+    borderRadius: 10,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    justifyContent: 'center',
   },
-  selectionButton: {
-    backgroundColor: theme.colors.accentPrimary,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    marginRight: 10,
-    marginBottom: 5,
-  },
-  selectedButton: {
-    backgroundColor: theme.colors.accentSecondary,
-  },
-  selectionButtonText: {
-    fontSize: 16,
-    color: theme.colors.textOnAccentPrimary || theme.colors.buttonPrimaryText,
-    fontWeight: 'bold',
-  },
-  selectedButtonText: {
-    color: theme.colors.textOnAccentSecondary || theme.colors.buttonSecondaryText,
+  picker: {
+    height: 50,
+    width: '100%',
+    color: theme.colors.textPrimary,
   },
   formTitle: {
     fontSize: 18,
