@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useState, useCallback } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View, RefreshControl } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
+import ProfessorAccountIcon from '@/components/ProfessorAccountIcon'; // Importar o ícone da conta
 import materiasFromMock from '../../data/materiasMock'; // Importando matérias do mock
 import turmasFromMock from '../../data/turmasMock';   // Importando turmas do mock
 
@@ -15,12 +16,19 @@ const baseStyles = StyleSheet.create({
     paddingBottom: 20, // Espaço no final da rolagem
     flexGrow: 1,
   },
+  headerBar: { // Estilo para a barra do ícone da conta
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 15,
+    paddingTop: 38, // Ajustado para descer o ícone (igual ao PainelScreen)
+    paddingBottom: 5,
+  },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 38, // Ajustado para dar espaço ao status bar
+    paddingTop: 10, // Reduzido, pois o headerBar já tem paddingTop
     paddingBottom: 10,
   },
   headerActions: { // Novo estilo para agrupar os botões de ação
@@ -144,6 +152,9 @@ export default function TurmasScreen() {
 
   return (
     <View style={[baseStyles.screenWrapper, { backgroundColor: theme.colors.backgroundPrimary }]}>
+      <View style={[baseStyles.headerBar, { backgroundColor: theme.colors.backgroundPrimary }]}>
+        <ProfessorAccountIcon />
+      </View>
       <ScrollView
         contentContainerStyle={baseStyles.scrollContainer}
         refreshControl={
